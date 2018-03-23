@@ -6,14 +6,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
-
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 public class CSVReaderExample {
 
@@ -26,7 +28,7 @@ public class CSVReaderExample {
 			reader = new CSVReader(new FileReader(csvFile));
 			String[] line;
 			while ((line = reader.readNext()) != null) {
-				sendEmail(line[0], line[1], line[3]);
+				sendEmail(line[0], line[1].split(" ")[0], "Capability statement for subcontracting");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -35,8 +37,8 @@ public class CSVReaderExample {
 	}
 
 	private static void sendEmail(String recipients, String agent, String address) {
-		final String username = "contact@preofferinspection.com";
-		final String password = "contact1@poi";
+		final String username = "contact@vizoomi.com";
+		final String password = "Contact#P8";
 
 		Properties props = new Properties();
 		props.put("mail.smtp.auth", "true");
@@ -53,28 +55,40 @@ public class CSVReaderExample {
 		try {
 
 			Message message = new MimeMessage(session);
-			message.setFrom(new InternetAddress("contact@preofferinspection.com", "PreOfferInspection"));
+			message.setFrom(new InternetAddress("contact@vizoomi.com", "Vizoomi"));
 			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipients));
 			message.setSubject(address);
-			message.setContent(
+
+			// creates body part for the message
+			MimeBodyPart messageBodyPart = new MimeBodyPart();
+			messageBodyPart.setContent(
 					"<div style=\"font-size:16px\">Dear " + agent
-							+ ",<br/><br/>Potential buyers are searching for your listed property: " + address
-							+ " on preofferinspection.com. "
-							+ "Please send your contact information to contact@preofferinspection.com for our licensed inspector to reach you."
-							+ "<br/><br/>Home buyers come to preofferinspection.com to view trusted inspections by our licensed affiliate inspectors for properties like yours. "
-							+ "Be proactive and competitive with a PreOfferInspection. Gain trust from potential buyers. "
-							+ "Get better prepared for questions and offers. No more inspection contingencies. "
-							+ "No need to have multiple inspectors in and out of your house. Sell your home quicker."
-							+ "<br/><br/>Daniel Watkins<br/>Customer Service Representative<br/>PreofferInspection.com<br/>(571)315-0790</div>",
+							+ ",<br/><br/>We (Vizoomi LLC) would like to submit a capability statement (please, see attached) for subcontracting. "
+							+ "We found your information on the SBA website. We would appreciate some feedback on how to proceed."
+							+ "<br/><br/>Thank you<br/>Rasaq Otunba<br/>vizoomi.tech<br/>(571)315-0790</div>",
 					"text/html; charset=utf-8");
+
+			// creates multi-part
+			Multipart multipart = new MimeMultipart();
+			multipart.addBodyPart(messageBodyPart);
+
+			MimeBodyPart attachPart = new MimeBodyPart();
+			String attachFile = "/Users/rotunb200/Dropbox/vizoomi/Capability_statement.pdf";
+			try {
+				attachPart.attachFile(attachFile);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+			multipart.addBodyPart(attachPart);
+			// sets the multipart as message's content
+			message.setContent(multipart);
 
 			Transport.send(message);
 
-			System.out.println("Done");
+			System.out.println("Done " + recipients);
 
-		} catch (MessagingException e) {
-			throw new RuntimeException(e);
-		} catch (UnsupportedEncodingException e) {
+		} catch (Exception e) {
+
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
